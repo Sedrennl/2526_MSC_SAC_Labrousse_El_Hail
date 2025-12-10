@@ -1,7 +1,9 @@
-../Core/Src/motor_control/motor.c:24:10:motor_set_dead_time	2
-../Core/Src/motor_control/motor.c:64:6:motor_init	1
-../Core/Src/motor_control/motor.c:93:6:motor_set_duty_cycle	2
-../Core/Src/motor_control/motor.c:114:6:motor_stop	1
-../Core/Src/motor_control/motor.c:128:5:motor_cmd_start	1
-../Core/Src/motor_control/motor.c:143:5:motor_cmd_set_duty	4
-../Core/Src/motor_control/motor.c:172:5:motor_cmd_stop	1
+../Core/Src/motor_control/motor.c:32:6:motor_init	1
+../Core/Src/motor_control/motor.c:65:10:motor_set_dead_time	2
+../Core/Src/motor_control/motor.c:104:6:motor_set_duty_cycle	2
+../Core/Src/motor_control/motor.c:125:6:motor_stop	1
+../Core/Src/motor_control/motor.c:139:5:motor_cmd_start	1
+../Core/Src/motor_control/motor.c:154:5:motor_cmd_set_duty	4
+../Core/Src/motor_control/motor.c:183:5:motor_cmd_stop	1
+../Core/Src/motor_control/motor.c:197:12:is_numeric	4
+../Core/Src/motor_control/motor.c:208:5:motor_control	4

@@ -14,7 +14,48 @@
 #define PWM_FREQUENCY_HZ      20000U    // Fréquence PWM : 20 kHz
 #define PWM_RESOLUTION_BITS   10U       // Résolution minimum 10 bits
 #define PWM_DUTY_CYCLE_PERCENT 60U      // Pour les tests, rapport cyclique à 60%
+
 #define MIN_DEAD_TIME_NS      147U      // Temps mort : 147 ns (DeadTime = 25)
+
+#define MOTOR_SPEED_MAX 1000
+
+
+/**
+ * @brief  Initialise les PWM pour la commande du hacheur (ponts U et V)
+ * @note   - Fréquence PWM : 20 kHz
+ *         - Temps mort : 147 ns (DeadTime = 25)
+ *         - Résolution : 8500 niveaux > 1024 (10 bits) ✓
+ *         - Rapport cyclique initial : 60%
+ *         - Signaux complémentaires avec temps mort
+ * @retval None
+ */
+void motor_init(void)
+{
+    // Démarrage des PWM complémentaires pour ponts U et V
+    // Les signaux sont automatiquement complémentaires avec temps mort
+
+    // Pont U : CH1 (PA8) et CH1N (PB13) - Complémentaires
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);      // U_PWM_H (PA8)
+    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);   // U_PWM_L (PB13) - Complémentaire de PA8
+
+    // Pont V : CH2 (PA9) et CH2N (PB14) - Complémentaires
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);      // V_PWM_H (PA9)
+    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);   // V_PWM_L (PB14) - Complémentaire de PA9
+
+    // Configuration du temps mort : 147 ns (DeadTime = 25)
+    uint32_t dead_time_real = motor_set_dead_time(147);
+
+    printf("Temps mort configure: %lu ns (contrainte <= 170 ns)\r\n", dead_time_real);
+    printf("Signaux complementaires avec temps mort actifs\r\n");
+
+    // Initialisation du rapport cyclique à 60% pour les tests
+    motor_set_duty_cycle(PWM_DUTY_CYCLE_PERCENT);
+
+
+    return shell_add(&hshell1, "speed", motor_control, "Set motor speed : speed XXXX");
+
+}
+
 
 /**
  * @brief  Configure le temps mort par écriture directe dans le registre
@@ -52,37 +93,7 @@ uint32_t motor_set_dead_time(uint16_t dead_time_ns)
     return real_dead_time_ns;
 }
 
-/**
- * @brief  Initialise les PWM pour la commande du hacheur (ponts U et V)
- * @note   - Fréquence PWM : 20 kHz
- *         - Temps mort : 147 ns (DeadTime = 25)
- *         - Résolution : 8500 niveaux > 1024 (10 bits) ✓
- *         - Rapport cyclique initial : 60%
- *         - Signaux complémentaires avec temps mort
- * @retval None
- */
-void motor_init(void)
-{
-    // Démarrage des PWM complémentaires pour ponts U et V
-    // Les signaux sont automatiquement complémentaires avec temps mort
 
-    // Pont U : CH1 (PA8) et CH1N (PB13) - Complémentaires
-    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);      // U_PWM_H (PA8)
-    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);   // U_PWM_L (PB13) - Complémentaire de PA8
-
-    // Pont V : CH2 (PA9) et CH2N (PB14) - Complémentaires
-    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);      // V_PWM_H (PA9)
-    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);   // V_PWM_L (PB14) - Complémentaire de PA9
-
-    // Configuration du temps mort : 147 ns (DeadTime = 25)
-    uint32_t dead_time_real = motor_set_dead_time(147);
-
-    printf("Temps mort configure: %lu ns (contrainte <= 170 ns)\r\n", dead_time_real);
-    printf("Signaux complementaires avec temps mort actifs\r\n");
-
-    // Initialisation du rapport cyclique à 60% pour les tests
-    motor_set_duty_cycle(PWM_DUTY_CYCLE_PERCENT);
-}
 
 /**
  * @brief  Définit le rapport cyclique des PWM du hacheur
@@ -179,4 +190,57 @@ int motor_cmd_stop(h_shell_t *h_shell, int argc, char **argv)
     printf("PWM arretees\r\n");
 
     return 0;
+}
+
+
+
+static int is_numeric(const char* str)
+{
+    for(int i = 0; str[i] != '\0'; i++)
+        if(str[i] < '0' || str[i] > '9')
+            return 0;
+    return 1;
+}
+
+
+
+
+int motor_control(h_shell_t* h_shell, int argc, char** argv)
+{
+    int size;
+
+    // ----- Vérification du nombre d'arguments -----
+    if(argc != 2)
+    {
+        size = snprintf(h_shell->print_buffer, SHELL_PRINT_BUFFER_SIZE,
+                        "Usage : speed XXXX\r\n");
+        h_shell->drv.transmit(h_shell->print_buffer, size);
+        return HAL_ERROR;
+    }
+
+    // ----- Vérifier que les digits sont valides -----
+    if(!is_numeric(argv[1]))
+    {
+        size = snprintf(h_shell->print_buffer, SHELL_PRINT_BUFFER_SIZE,
+                        "Error : XXXX must be numeric\r\n");
+        h_shell->drv.transmit(h_shell->print_buffer, size);
+        return HAL_ERROR;
+    }
+
+    // ----- Conversion -----
+    int value = atoi(argv[1]);
+
+    // ----- Limitation -----
+    if(value > MOTOR_SPEED_MAX)
+        value = MOTOR_SPEED_MAX;
+
+    // ----- Application PWM -----
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, value);
+
+    // ----- Feedback utilisateur -----
+    size = snprintf(h_shell->print_buffer, SHELL_PRINT_BUFFER_SIZE,
+                    "Motor speed set to %d\r\n", value);
+    h_shell->drv.transmit(h_shell->print_buffer, size);
+
+    return HAL_OK;
 }
