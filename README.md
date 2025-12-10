@@ -33,7 +33,7 @@ tf Fall Time –––                35 ns–––
 
 
 Donc pour un transistor seul, on a comme temps pour cesser la conduction :  
-td(off) + tf = 39 ns + 35 ns = 74 ns
+td(off) + tf + td(on)= 39 ns + 35 ns + 11 ns = 85 ns
 
 Pour la partie Drain-Source :  
 trr Reverse Recovery Time ––– 115 ––– max  170 ns
@@ -44,6 +44,19 @@ Un Dead time recommandé pourrait être 300ns
 
 On sait que notre PWM est à 20kHz, donc avec des périodes de 50us.
 
-Donc meme avec un seul Tick nous passerons au deca du dead time recommandé 
+On se fixera sur un dead time de 120ns environ.
+
+
+### Génération
+On génère 4 PWM : 
+![4_PWM](./photo/tek00001.png)
+
+Avec le dead time convenu : 
+![4_PWM_deadtime](./photo/tek00002.png)
+
+Mais ces dernières ne pourront pas marcher. Le deuxième signal (1N) doit etre le complémentaire du premier (1) ce qui est le cas. 
+Mais le 3 eme signal (2) doit etre égal à la complementaire de 1 (1N) fois (t-T/2) ou T est la période.
+Donc décalé de 180 degré. 
+
 
 
