@@ -28,8 +28,4 @@ int motor_cmd_start(h_shell_t *h_shell, int argc, char **argv);
 int motor_cmd_set_duty(h_shell_t *h_shell, int argc, char **argv);
 int motor_cmd_stop(h_shell_t *h_shell, int argc, char **argv);
 
-int motor_control(h_shell_t* h_shell, int argc, char** argv);
-
-static int is_numeric(const char* str);
-
 #endif /* INC_MOTOR_CONTROL_MOTOR_H_ */
