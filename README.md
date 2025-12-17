@@ -21,7 +21,6 @@ On voit bien sur la paillasse le on et off de la led et la fonction test renvoie
 # 6. Commande MCC basique
 ## 6.1. Génération de 4 PWM
 
---- 
 ### dead time
 
 Pour le temps mort minimum nous allons nous référer à la data sheet des transistors utilisés : IRF540N
@@ -68,7 +67,9 @@ Avec le dead time convenu :
 
 
 --- 
-### Commande de vitesse
+
+
+### 6.2 Commande de vitesse
 Via la lisaison UART, nous allons contrôler la comamnde. 
 
 A ce stade, nous avons les commandes shell suivantes : 
@@ -85,8 +86,7 @@ Ici par exemple, pour speed 1000 :
 ![signaux_pour_1000](./photo/tek00008.png)
 
 --- 
-### Premiers tests
-
+### 6.3 Premiers tests
 
 On fait les branchements du moteur avec le reste du circuit : 
 
@@ -106,4 +106,52 @@ On peut le voir avec l'ADC sur la carte. D'après le Kicad, on peut le trouver s
 Mais ce problème est réel, c'est pourquoi il faut le regler, notamment en faisant un changement de vitesse plus doux, en escalier.
 
 
-Pour limiter le couple à 2 ou 3 Ampères 
+
+# 7. Commande en boucle ouverte, mesure de Vitesse et de courant
+
+## 7.1. Commande de la vitesse
+
+
+
+## 7.2. Mesure de courant
+
+On doit mesurer les courants des 3 phases, U, V, W 
+
+d'après le routage, les Imes sont connectés à des capteurs de courants GO_10 : 
+
+![GO_10-SME.png](./photo/GO_10-SME.png)
+
+
+En s'appuyant sur la datasheet, et dans les conditions normales d'utilisation : 
+
+Alimentation : Uc = +5 V\
+Température : 25 °C\
+Courant nominal : IPN=±10 A\
+Plage de mesure : IPM =[−25 A;+25 A] 
+
+![datasheetGO_10](./photo/datasheetGO_10.png)
+
+
+on relève la fonction de transfer suivante : 
+
+Uout(I)=U ref+SN⋅I
+
+Avec : \
+U out la tension de sortie\
+U ref la tension de référence (2.5V)\
+Sn la sensibilité (80mV/A)\
+I le courant primaire mesuré ​\
+
+
+
+Ces courants sont mesurés sur les ports PA1, PB2 et PB13
+
+
+![Imes](./photo/Imes_sur_G474.png)
+
+Les mesures de ces 3 courants seront semblables. On peut donc décider de n'en mesurer qu'une (U sur PA1) pour ce TP. 
+
+
+## 7.3. Mesure de vitesse
+
+
